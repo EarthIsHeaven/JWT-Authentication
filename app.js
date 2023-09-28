@@ -24,6 +24,24 @@ const userSchema = new Schema({
 
 const User = mongoose.model('User', userSchema);
 
+const revokedTokens = [];
+
+function verifyToken(req, res, next) {
+  const token = req.header('Authorization');
+
+  if (!token || revokedTokens.includes(token)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
 app.post("/register", function(req, res){
   const email = req.body.email;
 
@@ -68,6 +86,23 @@ app.post("/login", function(req, res){
   fun();
 
 })
+
+app.post('/logout', (req, res) => {
+  const token = req.header('Authorization');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Add the token to the revoked tokens list
+  revokedTokens.push(token);
+  res.json({ message: 'Logout successful' });
+});
+
+// Protected route
+app.get('/protected', verifyToken, (req, res) => {
+  res.json({ message: 'This is a protected route', user: req.user });
+});
 
 app.listen(port,()=>{
   console.log(`Server running at port ${port}`);
