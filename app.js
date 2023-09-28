@@ -24,12 +24,25 @@ const userSchema = new Schema({
 const User = mongoose.model('User', userSchema);
 
 app.post("/register", function(req, res){
-  const newUser = new User({
-    email: req.body.email,
-    password: md5(req.body.password)
-  })
-  newUser.save();
-  res.json("Successfully stored");
+  const email = req.body.email;
+
+  async function exist(){
+    const existingUser = await User.findOne({email: email});
+    if(existingUser){
+      return res.status(400).json("Email already exists");
+    }
+    else 
+    {
+      const newUser = new User({
+        email: req.body.email,
+        password: md5(req.body.password)
+      })
+      newUser.save();
+      res.json("Successfully stored");
+    }
+  }
+  exist();
+
 })
 
 app.post("/login", function(req, res){
