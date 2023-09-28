@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 const app = express();
 const port = 3000;
 const { Schema } = mongoose;
+const secretKey = "Thinleyho"
 
 app.use(bodyParser.urlencoded({ 
   extended: true 
@@ -53,7 +54,8 @@ app.post("/login", function(req, res){
     const foundEmail = await User.findOne({email: email});
     if(foundEmail){
       if(foundEmail.password == password){
-        res.json("Successfully login");
+        const token =jwt.sign({ email }, secretKey, { expiresIn: '1h' });
+        res.json({token});
       }
       else {
         res.json("Incorrect password");
