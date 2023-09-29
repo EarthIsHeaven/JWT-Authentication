@@ -3,15 +3,17 @@ import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import md5 from "md5";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 
 const app = express();
-const port = 3000;
 const { Schema } = mongoose;
-const secretKey = "Thinleyho"
+let PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ 
   extended: true 
 }));
+
+dotenv.config();
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/jwt');
@@ -33,7 +35,7 @@ function verifyToken(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  jwt.verify(token, secretKey, (err, decoded) => {
+  jwt.verify(token, process.env.secretKey, (err, decoded) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid token' });
     }
@@ -72,7 +74,7 @@ app.post("/login", function(req, res){
     const foundEmail = await User.findOne({email: email});
     if(foundEmail){
       if(foundEmail.password == password){
-        const token =jwt.sign({ email }, secretKey, { expiresIn: '1h' });
+        const token =jwt.sign({ email }, process.env.secretKey, { expiresIn: '1h' });
         res.json({token});
       }
       else {
@@ -104,6 +106,7 @@ app.get('/protected', verifyToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
 
-app.listen(port,()=>{
-  console.log(`Server running at port ${port}`);
-})
+
+app.listen(PORT, () => {
+  console.log(`Server is up and running on ${PORT} ...`);
+});
